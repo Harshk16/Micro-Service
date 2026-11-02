@@ -1,0 +1,149 @@
+name: microservie-rabbitmq
+
+services:
+  order-service:
+    build:
+      context: ../Application/src/service/Order.Service
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__Database: Host=order-db;Port=5432;Database=orders;Username=postgres;Password=postgres
+      RabbitMQ__Host: rabbitmq
+    ports:
+      - "5101:8080"
+    depends_on:
+      order-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  payment-service:
+    build:
+      context: ../Application/src/service/Payment.Service
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__Database: Host=payment-db;Port=5432;Database=payments;Username=postgres;Password=postgres
+      RabbitMQ__Host: rabbitmq
+    ports:
+      - "5102:8080"
+    depends_on:
+      payment-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  product-service:
+    build:
+      context: ../Application/src/service/Product.Service
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__Database: Host=product-db;Port=5432;Database=products;Username=postgres;Password=postgres
+      RabbitMQ__Host: rabbitmq
+    ports:
+      - "5103:8080"
+    depends_on:
+      product-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  inventory-service:
+    build:
+      context: ../Application/src/service/Inventory.Service
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__Database: Host=inventory-db;Port=5432;Database=inventory;Username=postgres;Password=postgres
+      RabbitMQ__Host: rabbitmq
+    ports:
+      - "5104:8080"
+    depends_on:
+      inventory-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  order-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: orders
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - order-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d orders"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  payment-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: payments
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - payment-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d payments"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  product-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: products
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - product-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d products"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  inventory-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: inventory
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - inventory-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d inventory"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    environment:
+      RABBITMQ_DEFAULT_USER: app
+      RABBITMQ_DEFAULT_PASS: app
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  order-db-data:
+  payment-db-data:
+  product-db-data:
+  inventory-db-data:
+  rabbitmq-data:

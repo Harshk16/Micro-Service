@@ -1,0 +1,13 @@
+services:
+  order-service:
+    environment:
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+  payment-service:
+    environment:
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+  product-service:
+    environment:
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+  inventory-service:
+    environment:
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
