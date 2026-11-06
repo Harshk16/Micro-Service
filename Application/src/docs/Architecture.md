@@ -16,9 +16,9 @@ The solution is split into independently deployable ASP.NET Core services under
 
 Each service is a separate project and owns its own API boundary, business
 features, infrastructure integrations, and composition root. Services must never
-reference another service project; the only allowed shared reference is
-`Platform.Contracts`. Cross-service workflows should use explicit contracts or
-integration events through the messaging boundary.
+reference another service project or `Platform.Contracts`. Cross-service
+workflows should use explicit contracts or integration events through the
+messaging boundary.
 
 `Platform.Contracts` is a plain class library under `Application/src` that
 contains shared event classes and message contracts. It has no NuGet
@@ -26,8 +26,8 @@ dependencies and may contain only records and enums. Event names are versioned,
 such as `OrderCreatedV1`; a published event version must never be edited, and
 changes must be introduced as a new version. It must remain independent of
 service implementations, persistence, transport concerns, and business
-workflows. Services may reference these contracts when publishing or consuming
-integration events, but the contracts project must not reference any service.
+workflows. The services currently do not reference this project directly; message
+contracts should be introduced through an intentional integration boundary.
 
 The current service layout is:
 
