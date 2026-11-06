@@ -1,0 +1,6 @@
+@Auth.Servcie_HostAddress = http://localhost:5025
+
+GET {{Auth.Servcie_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
