@@ -28,5 +28,9 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Platform.Contracts\Platform.Contracts.csproj" />
+  </ItemGroup>
+
 
 </Project>

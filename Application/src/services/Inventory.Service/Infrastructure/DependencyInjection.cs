@@ -15,6 +15,7 @@ public static class DependencyInjection
     {
         services.AddCommonServices();
         services.AddInfrastructure(configuration);
+        services.AddMessaging(configuration, Assembly.GetExecutingAssembly());
 
         return services;
     }
@@ -69,16 +70,17 @@ public static class DependencyInjection
             x.UsingRabbitMq((context, cfg) =>
             {
                 // Read broker parameters directly from your appsettings blocks
-                var host = configuration["MessageBroker:Host"] ?? "localhost";
-                var vhost = configuration["MessageBroker:VHost"] ?? "/";
-                var username = configuration["MessageBroker:Username"] ?? "guest";
-                var password = configuration["MessageBroker:Password"] ?? "guest";
+                cfg.Host(
+                    configuration["RabbitMq:Host"],
+                    "/",
+                    h =>
+                    {
+                        h.Username(
+                            configuration["RabbitMq:Username"] ?? "guest");
 
-                cfg.Host(host, vhost, h =>
-                {
-                    h.Username(username);
-                    h.Password(password);
-                });
+                        h.Password(
+                            configuration["RabbitMq:Password"] ?? "guest");
+                    });
 
                 cfg.MessageTopology.SetEntityNameFormatter(new KebabCaseExchangeNameFormatter());
 
