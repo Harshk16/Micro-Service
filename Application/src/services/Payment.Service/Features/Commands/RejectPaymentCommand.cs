@@ -1,7 +1,8 @@
+using MassTransit;
 using MediatR;
+using MicroService.Contracts.Events;
 using Microsoft.EntityFrameworkCore;
 using Payment.Service.Infrastructure.Persistence.Configurations;
-// keep your existing using for PaymentDbContext
 
 namespace Payment.Service.Features.Commands;
 
@@ -12,10 +13,12 @@ public record RejectPaymentResponse(Guid PaymentId, Guid OrderId, string Status,
 public class RejectPaymentHandler : IRequestHandler<RejectPaymentCommand, RejectPaymentResponse>
 {
     private readonly PaymentDbContext _context;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public RejectPaymentHandler(PaymentDbContext context)
+    public RejectPaymentHandler(PaymentDbContext context, IPublishEndpoint publishEndpoint)
     {
         _context = context;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<RejectPaymentResponse> Handle(RejectPaymentCommand request, CancellationToken cancellationToken)
@@ -28,6 +31,9 @@ public class RejectPaymentHandler : IRequestHandler<RejectPaymentCommand, Reject
 
         payment.Reject(request.Reason);   // entity allows this only from Pending, and needs a reason
         await _context.SaveChangesAsync(cancellationToken);
+        
+         await _publishEndpoint.Publish(
+            new PaymentFailedEvent(payment.OrderId, request.Reason), cancellationToken);
 
         return new RejectPaymentResponse(payment.Id, payment.OrderId, payment.Status.ToString(), payment.FailureReason, payment.UpdatedAtUtc);
     }
