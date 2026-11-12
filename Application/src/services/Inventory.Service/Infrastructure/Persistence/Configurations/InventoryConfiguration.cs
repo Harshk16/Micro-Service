@@ -45,5 +45,7 @@ public class InventoryItemConfiguration : IEntityTypeConfiguration<InventoryItem
         builder.HasIndex(x => x.Sku).IsUnique();
 
         builder.Property<uint>("xmin").IsRowVersion();   // Postgres concurrency token
+
+        builder.ToTable("InventoryItems");
     }
 }

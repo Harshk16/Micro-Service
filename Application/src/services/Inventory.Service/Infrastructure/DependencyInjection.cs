@@ -82,9 +82,15 @@ public static class DependencyInjection
                             configuration["RabbitMq:Password"] ?? "guest");
                     });
 
+                // Exchange names: use kebab-case (e.g. order-created)
                 cfg.MessageTopology.SetEntityNameFormatter(new KebabCaseExchangeNameFormatter());
 
-                // 4. Automatically create and bind endpoints for discovered consumers
+                // Retry a failed message 3 times, 2 seconds apart,
+                // before it moves to the _error queue
+                cfg.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(2)));
+
+                // Create queues and bindings for all consumers found in this service.
+                // Must be last: it applies the settings above to each endpoint.
                 cfg.ConfigureEndpoints(context);
             });
         });

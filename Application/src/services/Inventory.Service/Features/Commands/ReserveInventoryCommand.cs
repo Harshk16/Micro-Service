@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.Service.Features.Commands;
 
-public record ReserveInventoryCommand(Guid ProductId, string Sku, int Quantity) : IRequest<ReserveInventoryResponse>;
+public record ReserveInventoryCommand(Guid ProductId, int Quantity) : IRequest<ReserveInventoryResponse>;
 
 public record ReserveInventoryResponse(Guid ProductId, string Sku, int QuantityAvailable);
 
@@ -27,6 +27,7 @@ public class ReserveInventoryHandler : IRequestHandler<ReserveInventoryCommand, 
         inventoryItem.Reserve(request.Quantity);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return new ReserveInventoryResponse(inventoryItem.Id, inventoryItem.Sku, inventoryItem.QuantityAvailable);
+        // return new ReserveInventoryResponse(inventoryItem.Id, inventoryItem.Sku, inventoryItem.QuantityAvailable);
+        return new ReserveInventoryResponse(inventoryItem.ProductId, inventoryItem.Sku, inventoryItem.QuantityAvailable);
     }
 }
