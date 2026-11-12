@@ -1,4 +1,6 @@
+using MassTransit;
 using MediatR;
+using MicroService.Contracts.Events;
 using Order.Api.Domain.Entities;
 using Order.Service.Infrastructure.Persistence.Configurations;
 
@@ -22,10 +24,13 @@ public record CreateOrderResponse(
 public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrderResponse>
 {
     private readonly OrderDbContext _context;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public CreateOrderHandler(OrderDbContext context)
+
+    public CreateOrderHandler(OrderDbContext context, IPublishEndpoint publishEndpoint)
     {
         _context = context;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<CreateOrderResponse> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
@@ -44,6 +49,18 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrde
         await _context.SaveChangesAsync(cancellationToken);
 
         // The broker comes later: this is where OrderSubmittedEvent will be published.
+
+        // await _publishEndpoint.Publish(
+        //     new OrderCreatedEvent(Guid.NewGuid(), order.CustomerId, order.TotalAmount, order.Currency), cancellationToken);
+
+        var evt = new OrderCreatedEvent(
+            order.Id,
+            order.CustomerId,
+            order.TotalAmount,
+            order.Currency,
+            order.Items.Select(i => new OrderItemContract(i.ProductId, i.Sku, i.Quantity)).ToList());
+
+        await _publishEndpoint.Publish(evt, cancellationToken);
 
         return new CreateOrderResponse(
             order.Id,

@@ -1,0 +1,1 @@
+public record OrderItemContract(Guid ProductId, string Sku, int Quantity);

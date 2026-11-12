@@ -11,7 +11,7 @@ namespace Order.Service.Infrastructure;
 
 public static class DependencyInjection
 {
-   public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddCommonServices();
         services.AddInfrastructure(configuration);
@@ -26,7 +26,7 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("Database");
 
         services.AddDbContext<OrderDbContext>(options =>
-            options.UseNpgsql(connectionString, b => 
+            options.UseNpgsql(connectionString, b =>
                 b.MigrationsAssembly(typeof(OrderDbContext).Assembly.FullName)));
 
         return services;
@@ -38,13 +38,13 @@ public static class DependencyInjection
 
         // 1. Register MediatR and scan the assembly for all Handlers
         // services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
-         services.AddMediatR(cfg => 
-        {
-            cfg.RegisterServicesFromAssembly(assembly);
-            
-            // 🟢 FIX: Register the Validation Behavior globally inside MediatR
-            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-        });
+        services.AddMediatR(cfg =>
+       {
+           cfg.RegisterServicesFromAssembly(assembly);
+
+           // 🟢 FIX: Register the Validation Behavior globally inside MediatR
+           cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+       });
 
         // 2. Register FluentValidation and scan for all Validator classes
         services.AddValidatorsFromAssembly(assembly);
@@ -82,9 +82,15 @@ public static class DependencyInjection
                             configuration["RabbitMq:Password"] ?? "guest");
                     });
 
+                // Exchange names: use kebab-case (e.g. order-created)
                 cfg.MessageTopology.SetEntityNameFormatter(new KebabCaseExchangeNameFormatter());
 
-                // 4. Automatically create and bind endpoints for discovered consumers
+                // Retry a failed message 3 times, 2 seconds apart,
+                // before it moves to the _error queue
+                cfg.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(2)));
+
+                // Create queues and bindings for all consumers found in this service.
+                // Must be last: it applies the settings above to each endpoint.
                 cfg.ConfigureEndpoints(context);
             });
         });

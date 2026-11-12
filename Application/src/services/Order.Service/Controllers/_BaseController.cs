@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Order.Service.Controllers;
 
+[ApiController]
+[Route("api/[controller]/[action]")]
 public class BaseController : ControllerBase
 {
     protected IActionResult HandleException(Exception ex)
