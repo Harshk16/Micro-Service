@@ -24,7 +24,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         // Read database connection string and register PostgreSQL provider
-        var connectionString = configuration.GetConnectionString("Database");
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
 
         services.AddDbContext<ProductDbContext>(options =>
             options.UseNpgsql(connectionString, b =>

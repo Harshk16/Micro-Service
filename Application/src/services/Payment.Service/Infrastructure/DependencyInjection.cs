@@ -21,7 +21,7 @@ public static class DependencyInjection
 
     public static IServiceCollection AddDbContext(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("Database");
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
         services.AddDbContext<PaymentDbContext>(options =>
             options.UseNpgsql(connectionString, b =>
                 b.MigrationsAssembly(typeof(PaymentDbContext).Assembly.FullName)));
