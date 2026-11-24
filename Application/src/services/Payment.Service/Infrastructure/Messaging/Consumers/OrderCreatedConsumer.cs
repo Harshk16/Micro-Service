@@ -18,8 +18,16 @@ public class OrderCreatedConsumer : IConsumer<OrderCreatedEvent>
         var message = context.Message;
         Console.WriteLine($"[Payment] OrderCreated received: OrderId={message.OrderId}, Amount={message.TotalAmount}, Currency={message.Currency}");
 
+        // throw new Exception("FAULT TEST");
+
         // if (message.OrderId == Guid.Parse("00000000-0000-0000-0000-000000000001"))
         //     throw new Exception("RETRY TEST");
+
+        // Console.WriteLine("CRASH TEST: stopping process now");
+        // Environment.Exit(1);
+
+        // if (message.OrderId == Guid.Parse("00000000-0000-0000-0000-000000000004") && DateTime.UtcNow.Second % 2 == 0)
+        //     throw new Exception("TRANSIENT TEST");
 
         await _mediator.Send(new CreatePaymentCommand(message.OrderId, message.CustomerId, message.TotalAmount, message.Currency));
 
