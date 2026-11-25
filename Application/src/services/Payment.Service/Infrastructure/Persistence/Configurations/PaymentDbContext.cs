@@ -1,3 +1,4 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Payment.Service.Features;
 
@@ -15,5 +16,9 @@ public class PaymentDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new PaymentItemConfiguration());
+
+        modelBuilder.AddInboxStateEntity();     // inbox: duplicate-message tracking for consumers
+        modelBuilder.AddOutboxMessageEntity();  // outbox: messages waiting to be sent  to RabbitMQ
+        modelBuilder.AddOutboxStateEntity();    // outbox: delivery progress for the sender
     }
 }

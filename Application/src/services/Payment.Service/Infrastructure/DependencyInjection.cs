@@ -58,6 +58,20 @@ public static class DependencyInjection
             // 2. Discover and register all Consumers from the passed assembly
             x.AddConsumers(serviceAssembly);
 
+            // 3. Outbox: saves events in the DB with the order, then sends them to RabbitMQ
+            x.AddEntityFrameworkOutbox<PaymentDbContext>(o =>
+            {
+                o.UsePostgres();
+                o.UseBusOutbox();
+                o.QueryDelay = TimeSpan.FromSeconds(3);
+            });
+
+            // Inbox: skips a message ID this consumer already processed (duplicate filter)
+            x.AddConfigureEndpointsCallback((context, name, cfg) =>
+            {
+                cfg.UseEntityFrameworkOutbox<PaymentDbContext>(context);
+            });
+
             // 3. Configure the RabbitMQ Transport layer
             x.UsingRabbitMq((context, cfg) =>
             {

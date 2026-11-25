@@ -31,5 +31,10 @@ public class OrderCreatedConsumer : IConsumer<OrderCreatedEvent>
 
         await _mediator.Send(new CreatePaymentCommand(message.OrderId, message.CustomerId, message.TotalAmount, message.Currency));
 
+        //   FOR Inbox State Testing: Uncomment the following lines to simulate a crash after processing the message
+        // if (message.OrderId == Guid.Parse("00000000-0000-0000-0000-000000000005"))
+        // Console.WriteLine("CRASH TEST: stopping process now");
+        // Environment.Exit(1);
+
     }
 }

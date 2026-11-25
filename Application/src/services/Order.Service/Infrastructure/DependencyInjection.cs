@@ -66,7 +66,21 @@ public static class DependencyInjection
             // 2. Discover and register all Consumers from the passed assembly
             x.AddConsumers(serviceAssembly);
 
-            // 3. Configure the RabbitMQ Transport layer
+            // 3. Outbox: saves events in the DB with the order, then sends them to RabbitMQ
+            x.AddEntityFrameworkOutbox<OrderDbContext>(o =>
+            {
+                o.UsePostgres();
+                o.UseBusOutbox();
+                o.QueryDelay = TimeSpan.FromSeconds(3);
+            });
+
+            // Inbox: skips a message ID this consumer already processed (duplicate filter)
+            x.AddConfigureEndpointsCallback((context, name, cfg) =>
+            {
+                cfg.UseEntityFrameworkOutbox<OrderDbContext>(context);
+            });
+
+            // 4. Configure the RabbitMQ Transport layer
             x.UsingRabbitMq((context, cfg) =>
             {
                 // Read broker parameters directly from your appsettings blocks
@@ -82,7 +96,7 @@ public static class DependencyInjection
                             configuration["RabbitMq:Password"] ?? "guest");
                     });
 
-                // Exchange names: use kebab-case (e.g. order-created)
+                // 5. Exchange names: use kebab-case (e.g. order-created)
                 cfg.MessageTopology.SetEntityNameFormatter(new KebabCaseExchangeNameFormatter());
 
                 // Retry a failed message 3 times, 2 seconds apart,

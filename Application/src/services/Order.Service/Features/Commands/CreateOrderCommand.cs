@@ -46,7 +46,10 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrde
         }
 
         _context.Orders.Add(order);
-        await _context.SaveChangesAsync(cancellationToken);
+
+        // For outbox save will happen after publish, so all should be in one transaction. If publish fails, the order will not be saved.
+        
+        // await _context.SaveChangesAsync(cancellationToken);
 
         // The broker comes later: this is where OrderSubmittedEvent will be published.
 
@@ -61,6 +64,8 @@ public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, CreateOrde
             order.Items.Select(i => new OrderItemContract(i.ProductId, i.Sku, i.Quantity)).ToList());
 
         await _publishEndpoint.Publish(evt, cancellationToken);
+
+        await _context.SaveChangesAsync(cancellationToken);
 
         return new CreateOrderResponse(
             order.Id,
